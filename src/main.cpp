@@ -5,6 +5,8 @@
 
 #include "config.h"
 
+void processInput(GLFWwindow *window);
+
 int main()
 {
     glfwInit();
@@ -39,16 +41,26 @@ int main()
         windowSettings.height = height;
 
         glViewport(0, 0, windowSettings.width, windowSettings.height);
-        // glViewport(0, 0, 800, 600);
     });
 
     // Render Loop
     while(!glfwWindowShouldClose(window))
     {
-        glfwSwapBuffers(window);
+        processInput(window);
+
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
         glfwPollEvents();
+        glfwSwapBuffers(window);
     }
 
     glfwTerminate();
     return 0;
+}
+
+void processInput(GLFWwindow *window)
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
 }
