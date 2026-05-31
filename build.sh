@@ -1,4 +1,4 @@
-g++ src/main.cpp src/glad.c -I./include -L./libs -lglfw -lGL -Wl,-rpath,./libs -o run
+g++ src/* -I./include -L./libs -lglfw -lGL -Wl,-rpath,./libs -o app
 
 # -I: physical location of include directory (can have multiple -Is)
 # -L: physical location of lib files
