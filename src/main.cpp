@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <string>
+#include <initializer_list>
 
 #include "config.h"
 
@@ -11,7 +12,6 @@ const char *vertexShaderSource = "#version 330 core\n"
     "{\n"
     "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
     "}\0";
-unsigned int vertexShader;
 
 const char *fragmentShaderSource = "#version 330 core\n"
     "out vec4 FragColor;\n"
@@ -19,9 +19,6 @@ const char *fragmentShaderSource = "#version 330 core\n"
     "{\n"
     "   FragColor = vec4(1.0f, 0.5f, 0.2, 1.0f);\n"
     "}\0";
-unsigned int fragmentShader;
-
-unsigned int shaderProgram;
 
 float vertices[] = {
     0.5f, 0.5f, 0.0f, // top right
@@ -40,6 +37,8 @@ unsigned int VBO;
 unsigned int VAO;
 
 void processInput(GLFWwindow *window);
+unsigned int compileShader(const char* shaderSource, int type);
+unsigned int createShaderProgram(std::initializer_list<unsigned int> list);
 
 int main()
 {
@@ -114,54 +113,12 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     // Create vertex shader
-    vertexShader = glCreateShader(GL_VERTEX_SHADER); // Create shader object
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-
-    // Check if compilation succeeded
-    int success;
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    
-    // Print info if not
-    char infoLog[512];
-    if (!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
+    unsigned int vertexShader = compileShader(vertexShaderSource, GL_VERTEX_SHADER);
 
     // Create fragment shader
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
+    unsigned int fragmentShader = compileShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
 
-    // Check if compilation succeeded
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    
-    // Print info if not
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    // Create shader program. This links shaders together into a proper pipeline.
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram); // this is what connects outputs to inputs of the shaders in the pipeline
-
-    // Check for errors
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success)
-    {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::LINK_FAILED\n" << infoLog << std::endl;
-    }
-
-    // Clean up shader objects
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    unsigned int shaderProgram = createShaderProgram({vertexShader, fragmentShader});
 
     // Set clear color
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -190,4 +147,61 @@ void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+}
+
+unsigned int compileShader(const char* shaderSource, int type)
+{
+    // Create vertex shader
+    unsigned int shaderID = glCreateShader(type); // Create shader object
+    glShaderSource(shaderID, 1, &shaderSource, NULL);
+    glCompileShader(shaderID);
+
+    // Check if compilation succeeded
+    int success;
+    glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
+    
+    // Print info if not
+    char infoLog[512];
+    if (!success)
+    {
+        std::string shaderTypeString;
+        if (type == GL_VERTEX_SHADER) { shaderTypeString = "VERTEX"; }
+        else if (type == GL_FRAGMENT_SHADER ) { shaderTypeString = "FRAGMENT"; }
+
+        glGetShaderInfoLog(shaderID, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::" << shaderTypeString << "::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
+    return shaderID;
+}
+
+unsigned int createShaderProgram(std::initializer_list<unsigned int> list)
+{
+    // Create shader program. This links shaders together into a proper pipeline.
+    unsigned int shaderProgram = glCreateProgram();
+    for (int shader : list)
+    {
+        glAttachShader(shaderProgram, shader);
+    }
+
+    glLinkProgram(shaderProgram); // this is what connects outputs to inputs of the shaders in the pipeline
+
+    // Check for errors
+    int success;
+    char infoLog[512];
+
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::LINK_FAILED\n" << infoLog << std::endl;
+    }
+
+    // Clean up shader objects
+    for (int shader : list)
+    {
+        glDeleteShader(shader);
+    }
+
+    return shaderProgram;
 }
