@@ -5,6 +5,33 @@
 
 #include "config.h"
 
+const char *vertexShaderSource = "#version 330 core\n"
+    "layout (location = 0) in vec3 aPos;\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    "}\0";
+unsigned int vertexShader;
+
+const char *fragmentShaderSource = "#version 330 core\n"
+    "out vec4 FragColor;\n"
+    "void main()\n"
+    "{\n"
+    "   FragColor = vec4(1.0f, 0.5f, 0.2, 1.0f);\n"
+    "}\0";
+unsigned int fragmentShader;
+
+unsigned int shaderProgram;
+
+float vertices[] = {
+    -0.5f, -0.5f, 0.0f,
+    0.5f, -0.5f, 0.0f,
+    0.0f, 0.5f, 0.0f
+};
+
+unsigned int VBO;
+unsigned int VAO;
+
 void processInput(GLFWwindow *window);
 
 int main()
@@ -43,13 +70,97 @@ int main()
         glViewport(0, 0, windowSettings.width, windowSettings.height);
     });
 
+    // Generate VAO (stores buffer and attribute configurations for easily swapping between them)
+    glGenVertexArrays(1, &VAO);
+
+    // Bind it
+    glBindVertexArray(VAO);
+
+    // Generate Buffers
+    glGenBuffers(1, &VBO);
+
+    // Bind Buffers (subsequent calls on this target will affect the bound buffer object)
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    // Buffer the data
+
+    // GL_STREAM_DRAW: the data is set only once and used by the GPU at most a few times.
+    // GL_STATIC_DRAW: the data is set only once and used many times.
+    // GL_DYNAMIC_DRAW: the data is changed a lot and used many times.
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // Tell OpenGL how to interpret vertex data. You are basically describing the layout of your vertex data (which is in the buffer)
+    // The buffer it pulls data from on depends on which VBO is bound to GL_ARRAY_BUFFER
+    // In the vertex shader, data pulled from attribute zero will depend on what this function points to
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0); // attribute, size of attribute, data type, normalize t/f, stride,  
+
+    // Enable attribute
+    glEnableVertexAttribArray(0); 
+
+    // Create vertex shader
+    vertexShader = glCreateShader(GL_VERTEX_SHADER); // Create shader object
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
+
+    // Check if compilation succeeded
+    int success;
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    
+    // Print info if not
+    char infoLog[512];
+    if (!success)
+    {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
+    // Create fragment shader
+    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+
+    // Check if compilation succeeded
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    
+    // Print info if not
+    if (!success)
+    {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
+    // Create shader program. This links shaders together into a proper pipeline.
+    shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram); // this is what connects outputs to inputs of the shaders in the pipeline
+
+    // Check for errors
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::LINK_FAILED\n" << infoLog << std::endl;
+    }
+
+    // Clean up shader objects
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    // Set clear color
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+
     // Render Loop
     while(!glfwWindowShouldClose(window))
     {
         processInput(window);
 
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        glUseProgram(shaderProgram);
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glfwPollEvents();
         glfwSwapBuffers(window);
