@@ -13,11 +13,18 @@ const char *vertexShaderSource = "#version 330 core\n"
     "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
     "}\0";
 
-const char *fragmentShaderSource = "#version 330 core\n"
+const char *fragmentShaderSource1 = "#version 330 core\n"
     "out vec4 FragColor;\n"
     "void main()\n"
     "{\n"
     "   FragColor = vec4(1.0f, 0.5f, 0.2, 1.0f);\n"
+    "}\0";
+
+const char *fragmentShaderSource2 = "#version 330 core\n"
+    "out vec4 FragColor;\n"
+    "void main()\n"
+    "{\n"
+    "   FragColor = vec4(1.0f, 1.0f, 0.0, 1.0f);\n"
     "}\0";
 
 float vertices1[] = {
@@ -153,9 +160,16 @@ int main()
     unsigned int vertexShader = compileShader(vertexShaderSource, GL_VERTEX_SHADER);
 
     // Create fragment shader
-    unsigned int fragmentShader = compileShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
+    unsigned int fragmentShader1 = compileShader(fragmentShaderSource1, GL_FRAGMENT_SHADER);
+    unsigned int fragmentShader2 = compileShader(fragmentShaderSource2, GL_FRAGMENT_SHADER);
 
-    unsigned int shaderProgram = createShaderProgram({vertexShader, fragmentShader});
+    unsigned int shaderProgram1 = createShaderProgram({vertexShader, fragmentShader1});
+    unsigned int shaderProgram2 = createShaderProgram({vertexShader, fragmentShader2});
+
+    // Clean up shaders
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader1);
+    glDeleteShader(fragmentShader2);
 
     // Set clear color
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -167,9 +181,10 @@ int main()
 
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(shaderProgram);
+        glUseProgram(shaderProgram1);
         glBindVertexArray(VAO1);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glUseProgram(shaderProgram2);
         glBindVertexArray(VAO2);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
@@ -234,12 +249,6 @@ unsigned int createShaderProgram(std::initializer_list<unsigned int> list)
     {
         glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
         std::cout << "ERROR::SHADER::LINK_FAILED\n" << infoLog << std::endl;
-    }
-
-    // Clean up shader objects
-    for (int shader : list)
-    {
-        glDeleteShader(shader);
     }
 
     return shaderProgram;
