@@ -20,21 +20,27 @@ const char *fragmentShaderSource = "#version 330 core\n"
     "   FragColor = vec4(1.0f, 0.5f, 0.2, 1.0f);\n"
     "}\0";
 
-float vertices[] = {
-    0.5f, 0.5f, 0.0f, // top right
-    0.5f, -0.5f, 0.0f, // bottom right
-    -0.5f, -0.5f, 0.0f, // bottom left
-    -0.5f, 0.5f, 0.0f // top left
+float vertices1[] = {
+    0.5f, 0.5f, 0.0f, // top 
+    0.75f, -0.5f, 0.0f, // bottom right
+    0.25f, -0.5f, 0.0f // bottom left
+};
+
+float vertices2[] = {
+    -0.5f, 0.5f, 0.0f, // top
+    -0.25f, -0.5f, 0.0f, // bottom right
+    -0.75f, -0.5f, 0.0f // bottom left
 };
 
 unsigned int indices[] = {
-    0, 1, 3, // first triangle
-    1, 2, 3 // second triangle
+    0, 1, 2, // works for both triangles as long as their corresponding vertices are buffered in the same order
 };
-unsigned int EBO;
 
-unsigned int VBO;
-unsigned int VAO;
+unsigned int EBO;
+unsigned int VBO1;
+unsigned int VBO2;
+unsigned int VAO1;
+unsigned int VAO2;
 
 void processInput(GLFWwindow *window);
 unsigned int compileShader(const char* shaderSource, int type);
@@ -76,18 +82,18 @@ int main()
         glViewport(0, 0, windowSettings.width, windowSettings.height);
     });
 
-    // Generate VAO (stores buffer and attribute configurations for easily swapping between them)
-    glGenVertexArrays(1, &VAO);
+    // Generate Buffers
+    glGenVertexArrays(1, &VAO1); // stores vertex buffer and attribute configuration
+    glGenVertexArrays(1, &VAO2);
+    glGenBuffers(1, &VBO1); // stores vertex data raw
+    glGenBuffers(1, &VBO2);
+    glGenBuffers(1, &EBO); // stores indices of vertex data
 
     // Bind it
-    glBindVertexArray(VAO);
-
-    // Generate Buffers
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    glBindVertexArray(VAO1);
 
     // Bind Buffers (subsequent calls on this target will affect the bound buffer object)
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO1);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 
     // Buffer the data
@@ -96,7 +102,38 @@ int main()
     // GL_STATIC_DRAW: the data is set only once and used many times.
     // GL_DYNAMIC_DRAW: the data is changed a lot and used many times.
 
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices1), vertices1, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    // Tell OpenGL how to interpret vertex data. You are basically describing the layout of your vertex data (which is in the buffer)
+    // The buffer it pulls data from on depends on which VBO is bound to GL_ARRAY_BUFFER
+    // In the vertex shader, data pulled from attribute zero will depend on what this function points to
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0); // attribute, size of attribute, data type, normalize t/f, stride, offset
+
+    // Enable attribute
+    glEnableVertexAttribArray(0); 
+
+    // Unbind buffers
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    // Do it again but for second triangle
+
+    // Bind it
+    glBindVertexArray(VAO2);
+
+    // Bind Buffers (subsequent calls on this target will affect the bound buffer object)
+    glBindBuffer(GL_ARRAY_BUFFER, VBO2);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
+    // Buffer the data
+
+    // GL_STREAM_DRAW: the data is set only once and used by the GPU at most a few times.
+    // GL_STATIC_DRAW: the data is set only once and used many times.
+    // GL_DYNAMIC_DRAW: the data is changed a lot and used many times.
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // Tell OpenGL how to interpret vertex data. You are basically describing the layout of your vertex data (which is in the buffer)
@@ -131,7 +168,9 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
-        glBindVertexArray(VAO);
+        glBindVertexArray(VAO1);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(VAO2);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
