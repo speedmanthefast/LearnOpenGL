@@ -4,7 +4,7 @@
 #include <string>
 #include <initializer_list>
 
-#include "config.h"
+#include "WindowManager.h"
 
 const char *vertexShaderSource = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
@@ -42,39 +42,9 @@ unsigned int createShaderProgram(std::initializer_list<unsigned int> list);
 
 int main()
 {
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    // Initialzie GLFW: Handles creating windows
-    GLFWwindow* window = glfwCreateWindow(windowSettings.width, windowSettings.height, "LearnOpenGL", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-
-    // Initialize GLAD: Links OpenGL functions to graphics driver functions
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
-
-    // Set viewport size
-    glViewport(0, 0, windowSettings.width, windowSettings.height);
-
-    // Set resizing callback function
-    glfwSetFramebufferSizeCallback(window, [](GLFWwindow*, int width, int height)
-    {
-        windowSettings.width = width;
-        windowSettings.height = height;
-
-        glViewport(0, 0, windowSettings.width, windowSettings.height);
-    });
+    WindowManager& manager = WindowManager::getInstance();
+    manager.init();
+    GLFWwindow* window = manager.getWindow();
 
     // Generate VAO (stores buffer and attribute configurations for easily swapping between them)
     glGenVertexArrays(1, &VAO);
