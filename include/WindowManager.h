@@ -16,10 +16,13 @@ class WindowManager {
             return instance;
         }
 
+        // Member function prototypes 
         bool init();
         bool isInitialized() const { return m_isInitialized; }
+        int getMaxAttributes() const; // Get maximum number of vertex attributes supported by the hardware
 
         GLFWwindow* getWindow();
+
 
     private: 
 

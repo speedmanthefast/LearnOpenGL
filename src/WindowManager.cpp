@@ -50,3 +50,10 @@ GLFWwindow* WindowManager::getWindow()
 {
     return m_window;
 }
+
+int WindowManager::getMaxAttributes() const
+{
+    int nrAttributes;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
+    return nrAttributes;
+}
