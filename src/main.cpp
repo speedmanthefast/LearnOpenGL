@@ -6,24 +6,7 @@
 #include <math.h>
 
 #include "WindowManager.h"
-
-const char *vertexShaderSource = "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec3 aColor;\n"
-    "out vec3 ourColor;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "   ourColor = aColor;\n"
-    "}\0";
-
-const char *fragmentShaderSource = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "in vec3 ourColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(ourColor, 1.0);\n"
-    "}\0";
+#include "shader.h"
 
 float vertices[] = {
     // positions // colors
@@ -41,8 +24,6 @@ unsigned int VBO;
 unsigned int VAO;
 
 void processInput(GLFWwindow *window);
-unsigned int compileShader(const char* shaderSource, int type);
-unsigned int createShaderProgram(std::initializer_list<unsigned int> list);
 
 int main()
 {
@@ -90,13 +71,7 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    // Create vertex shader
-    unsigned int vertexShader = compileShader(vertexShaderSource, GL_VERTEX_SHADER);
-
-    // Create fragment shader
-    unsigned int fragmentShader = compileShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
-
-    unsigned int shaderProgram = createShaderProgram({vertexShader, fragmentShader});
+    Shader shader("shaders/vertexShader.glsl", "shaders/fragmentShader.glsl");
 
     // Set clear color
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -111,21 +86,18 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Calculate color for this frame
-        float timeValue = glfwGetTime();
-        float greenValue = (std::sin(timeValue) / 2.0f) + 0.5f;
-
-        // Query the location of the 'outColor' uniform
-        int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
+        // float timeValue = glfwGetTime();
+        // float greenValue = (std::sin(timeValue) / 2.0f) + 0.5f;
 
         // Activate shader program
-        glUseProgram(shaderProgram);
+        shader.use();
 
-        // Load color data into uniform. Need to call glUseProgram first because this function operates on the currently bound shader program.
-        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f); 
+        // Set uniform
+        // shader.setFloat("outColor", greenValue);
 
         // Render vertex data
         glBindVertexArray(VAO); // Bind VAO to use VBO and EBO data
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
         // Swap buffers and poll IO events
@@ -141,61 +113,4 @@ void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-}
-
-unsigned int compileShader(const char* shaderSource, int type)
-{
-    // Create vertex shader
-    unsigned int shaderID = glCreateShader(type); // Create shader object
-    glShaderSource(shaderID, 1, &shaderSource, NULL);
-    glCompileShader(shaderID);
-
-    // Check if compilation succeeded
-    int success;
-    glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
-    
-    // Print info if not
-    char infoLog[512];
-    if (!success)
-    {
-        std::string shaderTypeString;
-        if (type == GL_VERTEX_SHADER) { shaderTypeString = "VERTEX"; }
-        else if (type == GL_FRAGMENT_SHADER ) { shaderTypeString = "FRAGMENT"; }
-
-        glGetShaderInfoLog(shaderID, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::" << shaderTypeString << "::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    return shaderID;
-}
-
-unsigned int createShaderProgram(std::initializer_list<unsigned int> list)
-{
-    // Create shader program. This links shaders together into a proper pipeline.
-    unsigned int shaderProgram = glCreateProgram();
-    for (int shader : list)
-    {
-        glAttachShader(shaderProgram, shader);
-    }
-
-    glLinkProgram(shaderProgram); // this is what connects outputs to inputs of the shaders in the pipeline
-
-    // Check for errors
-    int success;
-    char infoLog[512];
-
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success)
-    {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::LINK_FAILED\n" << infoLog << std::endl;
-    }
-
-    // Clean up shader objects
-    for (int shader : list)
-    {
-        glDeleteShader(shader);
-    }
-
-    return shaderProgram;
 }
