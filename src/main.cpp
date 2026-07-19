@@ -3,24 +3,23 @@
 #include <iostream>
 #include <string>
 #include <initializer_list>
+#include <math.h>
 
 #include "WindowManager.h"
 
 const char *vertexShaderSource = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
-    "out vec4 vertexColor;\n"
     "void main()\n"
     "{\n"
     "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "   vertexColor = vec4(0.5, 0.0, 0.0, 1.0);\n"
     "}\0";
 
 const char *fragmentShaderSource = "#version 330 core\n"
-    "in vec4 vertexColor;\n"
     "out vec4 FragColor;\n"
+    "uniform vec4 ourColor;\n"
     "void main()\n"
     "{\n"
-    "   FragColor = vertexColor;\n"
+    "   FragColor = ourColor;\n"
     "}\0";
 
 float vertices[] = {
@@ -99,17 +98,33 @@ int main()
     // Render Loop
     while(!glfwWindowShouldClose(window))
     {
+        // Handle input
         processInput(window);
 
+        // Clear buffer with the set clear color
         glClear(GL_COLOR_BUFFER_BIT);
 
+        // Calculate color for this frame
+        float timeValue = glfwGetTime();
+        float greenValue = (std::sin(timeValue) / 2.0f) + 0.5f;
+
+        // Query the location of the 'outColor' uniform
+        int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
+
+        // Activate shader program
         glUseProgram(shaderProgram);
-        glBindVertexArray(VAO);
+
+        // Load color data into uniform. Need to call glUseProgram first because this function operates on the currently bound shader program.
+        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f); 
+
+        // Render vertex data
+        glBindVertexArray(VAO); // Bind VAO to use VBO and EBO data
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
-        glfwPollEvents();
+        // Swap buffers and poll IO events
         glfwSwapBuffers(window);
+        glfwPollEvents();
     }
 
     glfwTerminate();
