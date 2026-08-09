@@ -1,4 +1,4 @@
-#include <glad/glad.h>
+#include <glad/glad.h> // glad actually needs to be imported before glfw
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <string>
@@ -9,24 +9,27 @@
 #include "shader.h"
 
 float vertices[] = {
-    // positions // colors
+    // x, y, z, r, g, b
     0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom right
     -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
     0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f // top
 };
 
+// Specify the order in which to connect vertices
 unsigned int indices[] = {
     0, 1, 2
 };
-unsigned int EBO;
 
-unsigned int VBO;
-unsigned int VAO;
+// Buffer objects
+unsigned int EBO;   // Element Buffer Object
+unsigned int VBO;   // Vertex Buffer Object
+unsigned int VAO;   // Vertex Array Object
 
 void processInput(GLFWwindow *window);
 
 int main()
 {
+    // Handles boilerplate code (glfw, glad init)
     WindowManager& manager = WindowManager::getInstance();
     manager.init();
     GLFWwindow* window = manager.getWindow();
@@ -59,7 +62,7 @@ int main()
     // In the vertex shader, data pulled from attribute zero will depend on what this function points to
 
     // attribute, size of attribute, data type, normalize t/f, stride, offset
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); // attribute pointer for vertex data
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); // attribute pointer for position data
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // attribute pointer for color data
 
     // Enable attribute
@@ -71,6 +74,7 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+    // Custom shader class to handle compilation and linking
     Shader shader("shaders/vertexShader.glsl", "shaders/fragmentShader.glsl");
 
     // Set clear color
@@ -85,15 +89,8 @@ int main()
         // Clear buffer with the set clear color
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Calculate color for this frame
-        // float timeValue = glfwGetTime();
-        // float greenValue = (std::sin(timeValue) / 2.0f) + 0.5f;
-
         // Activate shader program
         shader.use();
-
-        // Set uniform
-        // shader.setFloat("outColor", greenValue);
 
         // Render vertex data
         glBindVertexArray(VAO); // Bind VAO to use VBO and EBO data

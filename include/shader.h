@@ -18,7 +18,8 @@ class Shader
         void use(); // use/activate the shader
 
         // Utility uniform functions
-        void setBool(const std::string &name, bool value) const; // Declare these const even though they are setters because they modify uniforms, not member variables
+        // Declare these const even though they are setters because they modify uniforms, not member variables
+        void setBool(const std::string &name, bool value) const;
         void setInt(const std::string &name, int value) const;
         void setFloat(const std::string &name, float value) const;
 
