@@ -91,6 +91,7 @@ int main()
 
         // Activate shader program
         shader.use();
+        shader.setFloat("hOffset", 0.35f); // Set a float for the active shader program, so this goes after .use()
 
         // Render vertex data
         glBindVertexArray(VAO); // Bind VAO to use VBO and EBO data
