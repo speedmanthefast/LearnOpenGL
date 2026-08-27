@@ -7,6 +7,7 @@
 
 #include "WindowManager.h"
 #include "shader.h"
+#include "stb_image.h"
 
 float vertices[] = {
     // x, y, z, r, g, b
@@ -19,6 +20,18 @@ float vertices[] = {
 unsigned int indices[] = {
     0, 1, 2
 };
+
+// Texture coordinates (tex coordinates are confined to (0,0) -> (1,1))
+float texCoords[] = {
+    0.0f, 0.0f, // lower-left corner
+    1.0f, 0.0f, // lower-right corner
+    0.5f, 1.0f // top-center corner
+};
+
+// Store texture data
+int width, height, nrChannels; // properties
+unsigned int texture; // OpenGL ID
+unsigned char *texture_data;
 
 // Buffer objects
 unsigned int EBO;   // Element Buffer Object
@@ -33,6 +46,37 @@ int main()
     WindowManager& manager = WindowManager::getInstance();
     manager.init();
     GLFWwindow* window = manager.getWindow();
+
+    // Generate texture
+    glGenTextures(1, &texture);
+
+    // Bind Texture
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    // Set texture filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Load texture data
+    texture_data = stbi_load("./assets/stone.png", &width, &height, &nrChannels, 0);
+
+    if (texture_data)
+    {
+        // Generate texture
+        // Args: texture target, corresponding mipmap level, resulting texture format, texture width, texture height, legacy stuff (this should always be zero), source data format, source data datatype, source data
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture_data);
+
+        // To use mipmaps, you could call the previous function again and set each mipmap manually for each level, or you could generate them manually with
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+
+    stbi_image_free(texture_data);
 
     // Generate VAO (stores buffer and attribute configurations for easily swapping between them)
     glGenVertexArrays(1, &VAO);
