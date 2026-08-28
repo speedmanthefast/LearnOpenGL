@@ -10,22 +10,17 @@
 #include "stb_image.h"
 
 float vertices[] = {
-    // x, y, z, r, g, b
-    0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom right
-    -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
-    0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f // top
+    // positions        // colors           // texture coords
+    0.5f, 0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
+    0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
+    -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
+    -0.5f, 0.5f, 0.0f,  1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left
 };
 
 // Specify the order in which to connect vertices
 unsigned int indices[] = {
-    0, 1, 2
-};
-
-// Texture coordinates (tex coordinates are confined to (0,0) -> (1,1))
-float texCoords[] = {
-    0.0f, 0.0f, // lower-left corner
-    1.0f, 0.0f, // lower-right corner
-    0.5f, 1.0f // top-center corner
+    0, 2, 3, // first triangle  (top-right, bottom-left, top-left)
+    0, 1, 2  // second triangle (top-right, bottom-right, bottom-left)
 };
 
 // Store texture data
@@ -77,6 +72,7 @@ int main()
     }
 
     stbi_image_free(texture_data);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     // Generate VAO (stores buffer and attribute configurations for easily swapping between them)
     glGenVertexArrays(1, &VAO);
@@ -106,12 +102,14 @@ int main()
     // In the vertex shader, data pulled from attribute zero will depend on what this function points to
 
     // attribute, size of attribute, data type, normalize t/f, stride, offset
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); // attribute pointer for position data
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float))); // attribute pointer for color data
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0); // attribute pointer for position data
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); // attribute pointer for color data
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float))); // attribute pointer for texture coord data (2 components: s, t)
 
     // Enable attribute
     glEnableVertexAttribArray(0); 
     glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
 
     // Unbind buffers
     glBindVertexArray(0);
@@ -137,8 +135,9 @@ int main()
         shader.use();
 
         // Render vertex data
+        glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VAO); // Bind VAO to use VBO and EBO data
-        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // mode, number of indicies, data type, offset
         glBindVertexArray(0);
 
         // Swap buffers and poll IO events
