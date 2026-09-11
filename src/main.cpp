@@ -24,9 +24,13 @@ unsigned int indices[] = {
 };
 
 // Store texture data
-int width, height, nrChannels; // properties
-unsigned int texture; // OpenGL ID
-unsigned char *texture_data;
+int width1, height1, nrChannels1; // properties
+unsigned int texture1; // OpenGL ID
+unsigned char *texture_data1;
+
+int width2, height2, nrChannels2; // properties
+unsigned int texture2; // OpenGL ID
+unsigned char *texture_data2;
 
 // Buffer objects
 unsigned int EBO;   // Element Buffer Object
@@ -43,10 +47,11 @@ int main()
     GLFWwindow* window = manager.getWindow();
 
     // Generate texture
-    glGenTextures(1, &texture);
+    glGenTextures(1, &texture1);
 
     // Bind Texture
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture1);
 
     // Set texture filtering parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -55,13 +60,14 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // Load texture data
-    texture_data = stbi_load("./assets/stone.png", &width, &height, &nrChannels, 0);
+    stbi_set_flip_vertically_on_load(true);
+    texture_data1 = stbi_load("./assets/stone.png", &width1, &height1, &nrChannels1, 0);
 
-    if (texture_data)
+    if (texture_data1)
     {
         // Generate texture
         // Args: texture target, corresponding mipmap level, resulting texture format, texture width, texture height, legacy stuff (this should always be zero), source data format, source data datatype, source data
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture_data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width1, height1, 0, GL_RGB, GL_UNSIGNED_BYTE, texture_data1);
 
         // To use mipmaps, you could call the previous function again and set each mipmap manually for each level, or you could generate them manually with
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -71,8 +77,40 @@ int main()
         std::cout << "Failed to load texture" << std::endl;
     }
 
-    stbi_image_free(texture_data);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    stbi_image_free(texture_data1);
+
+
+    // Generate texture
+    glGenTextures(1, &texture2);
+
+    // Bind Texture
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texture2);
+
+    // Set texture filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Load texture data
+    texture_data2 = stbi_load("./assets/critic.png", &width2, &height2, &nrChannels2, 0);
+
+    if (texture_data2)
+    {
+        // Generate texture
+        // Args: texture target, corresponding mipmap level, resulting texture format, texture width, texture height, legacy stuff (this should always be zero), source data format, source data datatype, source data
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width2, height2, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture_data2);
+
+        // To use mipmaps, you could call the previous function again and set each mipmap manually for each level, or you could generate them manually with
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+
+    stbi_image_free(texture_data2);
 
     // Generate VAO (stores buffer and attribute configurations for easily swapping between them)
     glGenVertexArrays(1, &VAO);
@@ -134,8 +172,11 @@ int main()
         // Activate shader program
         shader.use();
 
+        // Assign texture units to frag shader uniforms
+        glUniform1i(glGetUniformLocation(shader.ID, "texture1"), 0); // manually
+        shader.setInt("texture2", 1); // or with shader class
+
         // Render vertex data
-        glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VAO); // Bind VAO to use VBO and EBO data
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // mode, number of indicies, data type, offset
         glBindVertexArray(0);
