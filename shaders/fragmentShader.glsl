@@ -12,7 +12,7 @@ void main()
 {
    
    // Just use texture
-   FragColor = mix(texture(texture1, TexCoord),
-                  texture(texture2, TexCoord), 0.4);
+   FragColor = mix(texture(texture1, TexCoord/64),
+                  texture(texture2, TexCoord/64), 0.4);
 
 };
