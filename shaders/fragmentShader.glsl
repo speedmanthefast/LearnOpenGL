@@ -13,6 +13,7 @@ void main()
    
    // Just use texture
    FragColor = mix(texture(texture1, TexCoord),
-                  texture(texture2, TexCoord), 0.4);
+                  texture(texture2, TexCoord * 2), 0.4);
+                  // Since the texture wrap parameter is set to repeat, sampling outside the standard 0->1 range will cause the sampler to wrap to the beginning of the image when interpolating
 
 };
