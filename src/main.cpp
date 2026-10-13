@@ -8,6 +8,7 @@
 #include "WindowManager.h"
 #include "shader.h"
 #include "stb_image.h"
+#include "texture.h"
 
 float vertices[] = {
     // positions        // colors           // texture coords
@@ -24,13 +25,8 @@ unsigned int indices[] = {
 };
 
 // Store texture data
-int width1, height1, nrChannels1; // properties
-unsigned int texture1; // OpenGL ID
-unsigned char *texture_data1;
+Texture tex1, tex2;
 
-int width2, height2, nrChannels2; // properties
-unsigned int texture2; // OpenGL ID
-unsigned char *texture_data2;
 
 // Buffer objects
 unsigned int EBO;   // Element Buffer Object
@@ -47,11 +43,11 @@ int main()
     GLFWwindow* window = manager.getWindow();
 
     // Generate texture
-    glGenTextures(1, &texture1);
+    glGenTextures(1, &tex1.id);
 
     // Bind Texture
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture1);
+    glActiveTexture(GL_TEXTURE0); // activate texture unit, subsequent binds hit this unit
+    glBindTexture(GL_TEXTURE_2D, tex1.id); 
 
     // Set texture filtering parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -61,13 +57,13 @@ int main()
 
     // Load texture data
     stbi_set_flip_vertically_on_load(true);
-    texture_data1 = stbi_load("./assets/stone.png", &width1, &height1, &nrChannels1, 0);
+    tex1.data = stbi_load("./assets/stone.png", &tex1.width, &tex1.height, &tex1.nrChannels, 0);
 
-    if (texture_data1)
+    if (tex1.data)
     {
         // Generate texture
         // Args: texture target, corresponding mipmap level, resulting texture format, texture width, texture height, legacy stuff (this should always be zero), source data format, source data datatype, source data
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width1, height1, 0, GL_RGB, GL_UNSIGNED_BYTE, texture_data1);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex1.width, tex1.height, 0, GL_RGB, GL_UNSIGNED_BYTE, tex1.data);
 
         // To use mipmaps, you could call the previous function again and set each mipmap manually for each level, or you could generate them manually with
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -77,15 +73,15 @@ int main()
         std::cout << "Failed to load texture" << std::endl;
     }
 
-    stbi_image_free(texture_data1);
+    stbi_image_free(tex1.data);
 
 
     // Generate texture
-    glGenTextures(1, &texture2);
+    glGenTextures(1, &tex2.id);
 
     // Bind Texture
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, texture2);
+    glBindTexture(GL_TEXTURE_2D, tex2.id);
 
     // Set texture filtering parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -94,13 +90,13 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // Load texture data
-    texture_data2 = stbi_load("./assets/critic.png", &width2, &height2, &nrChannels2, 0);
+    tex2.data = stbi_load("./assets/critic.png", &tex2.width, &tex2.height, &tex2.nrChannels, 0);
 
-    if (texture_data2)
+    if (tex2.data)
     {
         // Generate texture
         // Args: texture target, corresponding mipmap level, resulting texture format, texture width, texture height, legacy stuff (this should always be zero), source data format, source data datatype, source data
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width2, height2, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture_data2);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex2.width, tex2.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex2.data);
 
         // To use mipmaps, you could call the previous function again and set each mipmap manually for each level, or you could generate them manually with
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -110,7 +106,7 @@ int main()
         std::cout << "Failed to load texture" << std::endl;
     }
 
-    stbi_image_free(texture_data2);
+    stbi_image_free(tex2.data);
 
     // Generate VAO (stores buffer and attribute configurations for easily swapping between them)
     glGenVertexArrays(1, &VAO);
