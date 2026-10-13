@@ -13,6 +13,6 @@ void main()
    
    // Just use texture
    FragColor = mix(texture(texture1, TexCoord),
-                  texture(texture2, TexCoord), 0.4);
+                  texture(texture2, vec2(TexCoord.x, -TexCoord.y)), 0.4);
 
 };
