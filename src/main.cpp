@@ -26,6 +26,8 @@ unsigned int indices[] = {
 
 // Store texture data
 Texture tex1, tex2;
+float texBlend = 0.5f;
+float keyCooldown = 1.0f;
 
 
 // Buffer objects
@@ -171,6 +173,7 @@ int main()
         // Assign texture units to frag shader uniforms
         glUniform1i(glGetUniformLocation(shader.ID, "texture1"), 0); // manually
         shader.setInt("texture2", 1); // or with shader class
+        shader.setFloat("blend", texBlend);
 
         // Render vertex data
         glBindVertexArray(VAO); // Bind VAO to use VBO and EBO data
@@ -188,6 +191,28 @@ int main()
 
 void processInput(GLFWwindow *window)
 {
+    if (keyCooldown > 0)
+    {
+        keyCooldown = keyCooldown - 0.01f;
+        return;
+    }
+
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+    {
+        keyCooldown = 1.0f;
+        texBlend = texBlend + 0.05f;
+        if (texBlend > 1)
+            texBlend = 1;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+    {
+        keyCooldown = 1.0f;
+        texBlend = texBlend - 0.05f;
+        if (texBlend < 0)
+            texBlend = 0;
+    }
 }
