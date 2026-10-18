@@ -1,3 +1,4 @@
 app
 *.md
 **/.claude
+opencode.json
