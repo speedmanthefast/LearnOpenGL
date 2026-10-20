@@ -30,8 +30,8 @@ class WindowManager {
         // Init order needs to match declaration order 
         WindowManager() : 
             m_isInitialized(false),
-            m_width(1280),
-            m_height(720),
+            m_width(1000),
+            m_height(1000),
             m_title("LearnOpenGL") {}
 
         bool m_isInitialized;

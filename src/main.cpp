@@ -4,6 +4,9 @@
 #include <string>
 #include <initializer_list>
 #include <math.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "WindowManager.h"
 #include "shader.h"
@@ -171,6 +174,19 @@ int main()
         // Assign texture units to frag shader uniforms
         glUniform1i(glGetUniformLocation(shader.ID, "texture1"), 0); // manually
         shader.setInt("texture2", 1); // or with shader class
+
+        // Transformations
+        glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
+        glm::mat4 trans = glm::mat4(1.0f); // identity matrix
+        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f)); // translation matrix
+        //trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
+        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0, 0.0, 1.0));
+        //trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
+        //vec = trans * vec; // apply
+        //std::cout << vec.x << vec.y << vec.z << std::endl;
+
+        // Pass transformation matrix to shader (args: uniform_location, num_matrices, transpose_t/f, matrix_data)
+        glUniformMatrix4fv(glGetUniformLocation(shader.ID, "transform"), 1, GL_FALSE, glm::value_ptr(trans));
 
         // Render vertex data
         glBindVertexArray(VAO); // Bind VAO to use VBO and EBO data
