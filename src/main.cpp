@@ -178,9 +178,13 @@ int main()
         // Transformations
         glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
         glm::mat4 trans = glm::mat4(1.0f); // identity matrix
-        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f)); // translation matrix
-        //trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
         trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0, 0.0, 1.0));
+        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f)); // translation matrix
+
+        // The reason this happens is because rotation always happens about the world origin. When you rotate first, the world origin also happens to be the objects center
+        // So it rotates in place, but if you translate first, the rotation happens when this is no longer the case.
+
+        //trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
         //trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
         //vec = trans * vec; // apply
         //std::cout << vec.x << vec.y << vec.z << std::endl;
