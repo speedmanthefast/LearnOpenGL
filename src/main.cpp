@@ -159,6 +159,10 @@ int main()
     // Set clear color
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
+    // Scale float
+    float scale = 0;
+    float sin_scale = 0;
+
     // Render Loop
     while(!glfwWindowShouldClose(window))
     {
@@ -184,6 +188,25 @@ int main()
         //trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
         //vec = trans * vec; // apply
         //std::cout << vec.x << vec.y << vec.z << std::endl;
+
+        // Pass transformation matrix to shader (args: uniform_location, num_matrices, transpose_t/f, matrix_data)
+        glUniformMatrix4fv(glGetUniformLocation(shader.ID, "transform"), 1, GL_FALSE, glm::value_ptr(trans));
+
+        // Render vertex data
+        glBindVertexArray(VAO); // Bind VAO to use VBO and EBO data
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // mode, number of indicies, data type, offset
+        glBindVertexArray(0);
+
+        // Scaling math
+        scale = scale + 0.002;
+        if (scale > 100)
+            scale = 0;
+        sin_scale = abs(sin(scale));
+
+        // Transformations
+        trans = glm::mat4(1.0f); // identity matrix
+        trans = glm::translate(trans, glm::vec3(-0.5f, 0.5f, 0.0f)); // translation matrix
+        trans = glm::scale(trans, glm::vec3(sin_scale, sin_scale, sin_scale));
 
         // Pass transformation matrix to shader (args: uniform_location, num_matrices, transpose_t/f, matrix_data)
         glUniformMatrix4fv(glGetUniformLocation(shader.ID, "transform"), 1, GL_FALSE, glm::value_ptr(trans));
